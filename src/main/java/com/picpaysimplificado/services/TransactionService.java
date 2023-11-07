@@ -30,7 +30,7 @@ public class TransactionService {
     @Autowired
     private NotificationService notificationService;
 
-    public Transaction createTransaction(TransactionDTO transaction) throws Exception {
+    public Transaction createTransaction(final TransactionDTO transaction) throws Exception {
         User sender = this.userService.findUserById(transaction.senderId());
         User receiver = this.userService.findUserById(transaction.receiverId());
 
@@ -58,7 +58,7 @@ public class TransactionService {
 
         return newTransaction;
     }
-    public boolean authorizeTransaction(User sender, BigDecimal value){
+    public boolean authorizeTransaction(final User sender, BigDecimal value){
        ResponseEntity<Map> authorizationResponse = restTemplate.getForEntity("https://picpayapitest.free.beeceptor.com", Map.class);
 
        log.info("is server authorized: {}", authorizationResponse.getBody());

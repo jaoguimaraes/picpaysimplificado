@@ -28,7 +28,7 @@ public class User {
     @Enumerated(EnumType.STRING) //Para dizer que este cara representa um dos usuários (user real ou lojista)
     private UserType userType;
 
-    public User(UserDTO data) {
+    public User(final UserDTO data) {
         this.firstName = data.firstName();
         this.lastName = data.lastName();
         this.balance = data.balance();
