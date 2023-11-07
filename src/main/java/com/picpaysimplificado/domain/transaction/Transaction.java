@@ -20,7 +20,7 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private BigDecimal amount;
-    @ManyToOne//Relação do banco, muitos para um
+    @ManyToOne //Relação do banco, muitos para um
     @JoinColumn(name = "sender_id")
     private User sender;
     @ManyToOne
