@@ -4,18 +4,11 @@ import com.picpaysimplificado.domain.transaction.Transaction;
 import com.picpaysimplificado.domain.user.User;
 import com.picpaysimplificado.dtos.TransactionDTO;
 import com.picpaysimplificado.repositories.TransactionRepository;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Map;
 
-@Slf4j
 @Service
 public class TransactionService {
     @Autowired
@@ -25,7 +18,7 @@ public class TransactionService {
     private TransactionRepository repository;
 
     @Autowired
-    private RestTemplate restTemplate;
+    private AuthorizationService authService;
 
     @Autowired
     private NotificationService notificationService;
@@ -36,8 +29,9 @@ public class TransactionService {
 
         userService.validateTransaction(sender, transaction.value());
 
-        if(!this.authorizeTransaction(sender, transaction.value())){
-            throw new Exception("Transaction não autorizada");
+        boolean isAuthorized = this.authService.authorizeTransaction(sender, transaction.value());
+        if(!isAuthorized){
+            throw new Exception("Transação não autorizada");
         }
 
         Transaction newTransaction = new Transaction();
@@ -49,6 +43,7 @@ public class TransactionService {
         sender.setBalance(sender.getBalance().subtract(transaction.value()));
         receiver.setBalance(receiver.getBalance().add(transaction.value()));
 
+        //persistir (enviar) os dados no banco
         this.repository.save(newTransaction);
         this.userService.saveUser(sender);
         this.userService.saveUser(receiver);
@@ -57,16 +52,5 @@ public class TransactionService {
         this.notificationService.sendNotification(receiver, "Transação recebida com sucesso");
 
         return newTransaction;
-    }
-    public boolean authorizeTransaction(final User sender, BigDecimal value){
-       ResponseEntity<Map> authorizationResponse = restTemplate.getForEntity("https://picpayapitest.free.beeceptor.com", Map.class);
-
-       log.info("is server authorized: {}", authorizationResponse.getBody());
-       log.info("server status code: {}", authorizationResponse.getStatusCode());
-       if(authorizationResponse.getStatusCode() == HttpStatus.OK) {
-         return (boolean) authorizationResponse.getBody().get("authorized");
-       } else {
-           return false;
-       }
     }
 }
